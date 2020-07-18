@@ -1,83 +1,65 @@
-// const contactsRepository = require("../repositories/contactsRep");
-// const { takeData } = require("../repositories/contactsRep");
 const fs = require('fs')
 const path = require("path");
 const { promises: fsPromises } = fs;
+const ContactModel = require('../models/ContactModel');
 
 const contactsPath = path.join("./db/", "contacts.json");
 
 
 class ContactsController {
-  takeData() {
-    return fsPromises
-  .readFile(contactsPath, "utf-8")
-  .then(data => JSON.parse(data))
-  .catch(err => err)
-  };
-
   
 
   listContacts(req, res) {
-    return fsPromises
-    .readFile(contactsPath, "utf-8")
-      .then((data) => res.status(200).send(JSON.parse(data)))
+    return ContactModel.find({})
+      .then((data) => res.status(200).send(data))
       .catch((err) => console.log(err));
   }
 
-  getContact(req, res) {
+  async getContact(req, res) {
+    try{
       const {contactId} = req.params;
-      fsPromises
-      .readFile(contactsPath, "utf-8")
-      .then((data) => {
-      const array = JSON.parse(data).find((inside) => inside.id === Number(contactId))
-      if (!array) {
-          res.status(400).send({message: "Not fond"})
-      }
-      res.status(200).send(array)
-      }
-      )
+      const contact = await ContactModel.findById({_id: contactId});
+      if (!contact) {
+        res.status(400).send({message: "Contact not found"});
+      };
+      res.status(200).send(contact)
+      
+    } catch (e) {
+      console.error(e);
+      res.status(500).send(e)
+    }
   }
 
-//   postContact(id, data) {
-//     return contactsRepository.postContact(id, data);
-//   }
 
- addContact( req, res) {
-     fs.readFile(contactsPath, "utf-8", (err, data) => {
-        const array  = JSON.parse(data);
-        const newContact = {
-            ...req.body,
-            id: array.length + 1
-        } 
-          array.push(newContact)
-          fs.writeFile(contactsPath, JSON.stringify(array), "utf-8", function (err) {
-              if (err) throw err
-              console.log("Contact is added");
-          })
-          res.status(200).send(newContact)
-      })
- 
-      
+
+ async addContact( req, res) {
+
+  try{
+    const {name, email, phone, password, subscription} = req.body;
+    const newContact = await ContactModel.create({name, email, phone, password, subscription});
+
+    if(!newContact) {
+      res.send({message: "Somethisng is wrong"});
+    };
+    res.send({message: "New contact is added"})
+
+  } catch (e) {
+    console.error(e);
+    res.status(500).send(e)
+  }
+
   }
  
   async updateContact(req, res) {
     try {
-    const contactId = Number(req.params.contactId);
-    const contactsData = await fsPromises.readFile(contactsPath, "utf-8");
-    const contacts = JSON.parse(contactsData);
+    const contactId = req.params.contactId;
+    const {name, email, phone, password, subscription} = req.body
 
-    const {name, email, phone} = req.body
-
-    const contactIndex = contacts.findIndex(contact => contact.id === contactId)
-
-    if (contactIndex === -1) {
-      console.error("Error")
-     return res.status(404).send({message: "Contact not found"})
+    if (!name || !subscription) {
+      return res.send("Bad request")
     }
 
-    contacts[contactIndex] = {...contacts[contactIndex],  name, email, phone}
-
-    await fsPromises.writeFile(contactsPath, JSON.stringify(contacts), "utf-8")
+    const contact = await ContactModel.findByIdAndUpdate({_id:contactId}, {name, email, phone, password, subscription})
 
     res.status(200).send({message: "Data is succesfully changed"})
     } catch (e) {
@@ -88,20 +70,8 @@ class ContactsController {
 
  async deleteContact(req, res) {
     try {
-
-      console.log('hellllloo');
-      const contactId = Number(req.params.contactId);
-      const contactsData = await fsPromises.readFile(contactsPath, "utf-8");
-      const contacts = JSON.parse(contactsData);
-      const contactIndex = contacts.findIndex(contact => contact.id === contactId);
-
-      if( contactIndex === -1) {
-        return res.status(404).send({message: "contact not found"})
-      };
-
-      contacts.splice(contactIndex, 1);
-
-      await fsPromises.writeFile(contactsPath, JSON.stringify(contacts), 'utf-8');
+      const contactId = req.params.contactId;
+      await ContactModel.findByIdAndDelete({_id: contactId})
 
       res.status(200).send({message: "contact is deleted"})
 
