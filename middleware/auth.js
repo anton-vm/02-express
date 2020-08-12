@@ -2,12 +2,12 @@ const express = require('express');
 const userModel = require('../models/UserModel');
 
 const auth = async (req, res, next) => {
+
+
     try {
-        const { token } = { ...req.query, ...req.body };
-        console.log(token);
-        console.log(req.query);
-        console.log(req.body);
-    
+        const { token } = { ...req.query, ...req.body, ...req.headers };
+
+
     
         if(!token) {
             return res.status(400).send({message: "Not correct parameters"})
@@ -28,6 +28,7 @@ const auth = async (req, res, next) => {
          await user.save()
 
          req.user = user
+         req.token = token
 
          next()
 

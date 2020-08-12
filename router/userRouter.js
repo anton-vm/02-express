@@ -1,5 +1,6 @@
 const express = require('express');
 const UserModel = require('../models/UserModel');
+const auth = require("../middleware/auth")
 
 const router = express.Router();
 
@@ -9,7 +10,7 @@ router.post('/register', async (req, res) => {
         const existUser = await UserModel.findOne({email})
 
         if(existUser) {
-            return res.status(409).send({message: "Such user is in use"})
+            return res.status(409).send({message: "Such user is registered"})
         }
 
         const newUser = await UserModel.create({
@@ -49,7 +50,7 @@ router.get('/login', async (req, res) => {
     res.send(user)
 });
 
-router.post('/logout', async (req, res) => {
+router.post('/logout', auth,  async (req, res) => {
     const id = req.body._id
   
     const user = await UserModel.findById(id)
@@ -58,16 +59,17 @@ router.post('/logout', async (req, res) => {
     };
     user.token = "";
     await user.save();
-    res.send({message: "Logout is success"})
+    // res.send({message: "Logout is success"})
+    res.send(user)
 })
 
 
-router.get('/current', async (req, res) => {
-    const user = req
+router.get('/current', auth,  async (req, res) => {
+    const user = req.user
 
-    res.send({
-        
-    })
+    const {email, subscription} = user
+
+    res.status(200).json({ email, subscription})
 })
 
 module.exports = router
