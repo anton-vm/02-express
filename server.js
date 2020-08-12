@@ -4,6 +4,8 @@ const mongoose = require('mongoose');
 const DATABASE_NAME = "db-contacts"
 const CONNECTION_URL = `mongodb+srv://${process.env.USER}:${process.env.PASSWORD}@cluster0.i7bgb.mongodb.net/${DATABASE_NAME}`;
 
+// `mongodb+srv://user:5cFWScuThmsN1nTb@cluster0.i7bgb.mongodb.net/database`
+
 console.log(CONNECTION_URL);
 
 class ContactsDatabase {
