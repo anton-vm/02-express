@@ -5,6 +5,11 @@ const createAvatar = require('../helpers/avatarMaker');
 const fileSaver = require('../helpers/file-saver')
 const path = require('path')
 const fs = require('fs').promises;
+const mime = require('mime-types');
+const imagemin = require('imagemin')
+const imageminJpegtran = require("imagemin-jpegtran");
+const imageminPngquant = require("imagemin-pngquant");
+
 
 const router = express.Router();
 
@@ -96,23 +101,36 @@ router.get('/current', auth,  async (req, res) => {
 
 router.patch("/avatars", auth, fileSaver.single("image"), async (req, res) => {
     try {
+
         const {file, user} = req
 
-        const pathToStorage = path.join(process.cwd(), "public", "images")
+        const pathToStorage = path.join(process.cwd(), "public", "images", `avatar-${user.email}.${mime.extension(file.mimetype)}`)
+        //  await imagemin(file.path, {
+        //     destination: path.join(pathToStorage),
+        //     plugins: [
+        //       imageminJpegtran(),
+        //       imageminPngquant({
+        //         quality: [0.6, 0.8]
+        //       })
+        //     ]
+        //   });
 
        await fs.rename(file.path, pathToStorage)
 
-        const newFileURL = `${process.cwd()}/public/images/${file.filename}`
 
-        await UserModel.findByIdAndUpdate(user._id, {avatarURL: newFileURL})
 
-        res.status(200).send(newFileURL)
+        await UserModel.findByIdAndUpdate(user._id, {avatarURL: pathToStorage})
 
+        res.status(200).send({message: "avatar is changed"})
 
 
     } catch (e) {
         res.status(500).send({message: "something wrong"})
     }
+
+    
 })
+
+
 
 module.exports = router
