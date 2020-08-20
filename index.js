@@ -1,5 +1,6 @@
 require("dotenv").config();
 const express = require("express");
+const path = require('path')
 const contactsRouter = require("./router/index");
 const cors = require("cors");
 const userRouter = require('./router/userRouter')
@@ -16,7 +17,9 @@ async function main() {
   app.use(cors());
 
   app.use("/contacts", auth, contactsRouter);
-  app.use('/auth',  userRouter)
+  app.use('/auth',  userRouter);
+
+  app.use("/images", express.static(path.join(process.cwd(), "public", "images")))
 
   app.use((req, res) => {
     res.status(404).send({ message: "information not found" });
