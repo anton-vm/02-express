@@ -55,11 +55,6 @@ router.post('/register', async (req, res) => {
 router.get('/login', async (req, res) => {
     const {email, password} = req.body;
 
-    
-
-    // console.log(await createAvatar(email));
-    // console.log(process.cwd());
-
     const user = await UserModel.findOne({email})
 
     if(!user) {
@@ -86,7 +81,7 @@ router.post('/logout', auth,  async (req, res) => {
     };
     user.token = "";
     await user.save();
-    // res.send({message: "Logout is success"})
+
     res.send(user)
 })
 
@@ -105,17 +100,20 @@ router.patch("/avatars", auth, fileSaver.single("image"), async (req, res) => {
         const {file, user} = req
 
         const pathToStorage = path.join(process.cwd(), "public", "images", `avatar-${user.email}.${mime.extension(file.mimetype)}`)
-        //  await imagemin(file.path, {
-        //     destination: path.join(pathToStorage),
-        //     plugins: [
-        //       imageminJpegtran(),
-        //       imageminPngquant({
-        //         quality: [0.6, 0.8]
-        //       })
-        //     ]
-        //   });
+         await imagemin([file.path], {
+            destination: path.join(pathToStorage),
+            // glob: false,
+            plugins: [
+              imageminJpegtran({
+                quality: [0.6, 0.8]
+              }),
+              imageminPngquant({
+                quality: [0.6, 0.8]
+              })
+            ]
+          });
 
-       await fs.rename(file.path, pathToStorage)
+
 
 
 

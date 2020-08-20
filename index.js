@@ -5,7 +5,6 @@ const contactsRouter = require("./router/index");
 const cors = require("cors");
 const userRouter = require('./router/userRouter')
 const ContactsDatabase = require("./server");
-const imageRouter = require('./router/imageRouter')
 const auth = require('./middleware/auth')
 
 async function main() {
